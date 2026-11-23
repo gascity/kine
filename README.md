@@ -1,3 +1,5 @@
+> **⚠️ Experimental — a Gas City research build.** A fork of k3s-io/kine with a Dolt-backed [beads](https://github.com/gastownhall/beads) datastore driver (`--datastore-endpoint beads://…`): unmodified k3s on a store that keeps history, with branch and transaction control. Release candidate — see [`beads-v0.1.0-rc.1`](https://github.com/gascity/kine/releases/tag/beads-v0.1.0-rc.1). The API surface and capabilities are still being explored, and the binary is ~4× upstream (embedded Dolt). Not for production. The driver lives on the `beads-rc` branch.
+
 Kine (Kine is not etcd)
 =======================
 
