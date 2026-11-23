@@ -20,6 +20,9 @@ var (
 	config                 endpoint.Config
 	metricsConfig          metrics.Config
 	metricsIgnoreTLSConfig bool
+	branchControlSocket    string
+	branchControlAddress   string
+	branchControlTokenFile string
 )
 
 func New() *cli.App {
@@ -282,6 +285,24 @@ func New() *cli.App {
 			Destination: &config.S3Config.CABundle,
 			EnvVars:     []string{"AWS_CA_BUNDLE"},
 		},
+		&cli.StringFlag{
+			Name:        "branch-control-socket",
+			Usage:       "Unix socket path for the beads driver's branch-control HTTP API (fork/switch/promote/drop/status). Empty disables it. Requires the beads driver in SERVER mode.",
+			Destination: &branchControlSocket,
+			EnvVars:     []string{"KINE_BRANCH_CONTROL_SOCKET"},
+		},
+		&cli.StringFlag{
+			Name:        "branch-control-address",
+			Usage:       "TCP host:port for the beads driver's control API (branch + scoped transactions), guarded by a bearer token. Empty disables it. Requires --branch-control-token-file.",
+			Destination: &branchControlAddress,
+			EnvVars:     []string{"KINE_BRANCH_CONTROL_ADDRESS"},
+		},
+		&cli.StringFlag{
+			Name:        "branch-control-token-file",
+			Usage:       "File holding the bearer token required on the TCP control listener.",
+			Destination: &branchControlTokenFile,
+			EnvVars:     []string{"KINE_BRANCH_CONTROL_TOKEN_FILE"},
+		},
 		&cli.BoolFlag{
 			Name:    "debug",
 			Usage:   "Enable debug logging to stdout.",
@@ -327,6 +348,19 @@ func run(c *cli.Context) (rerr error) {
 	}
 
 	ctx := signals.SetupSignalContext()
+
+	// The beads branch-control server reads its socket path from the environment
+	// (the driver has no other channel to the CLI flags). Mirror the flag/env into
+	// the environment so a value passed as a flag reaches the driver too.
+	if branchControlSocket != "" {
+		os.Setenv("KINE_BRANCH_CONTROL_SOCKET", branchControlSocket)
+	}
+	if branchControlAddress != "" {
+		os.Setenv("KINE_BRANCH_CONTROL_ADDRESS", branchControlAddress)
+	}
+	if branchControlTokenFile != "" {
+		os.Setenv("KINE_BRANCH_CONTROL_TOKEN_FILE", branchControlTokenFile)
+	}
 
 	if !metricsIgnoreTLSConfig {
 		metricsConfig.ServerTLSConfig = config.ServerTLSConfig
